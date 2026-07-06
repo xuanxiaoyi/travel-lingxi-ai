@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node scripts/build-site.mjs",
     "serve": "node scripts/serve-static.mjs",
-    "test:syntax": "node --check app.js && node --check province-attractions.js && node --check attraction-knowledge.js && node --check national-scenic-knowledge.js && node --check knowledge-db.js && node --check travel-apis.js && node --check local-llm.js && node --check scripts/generate-national-scenic.mjs && node --check scripts/travel-agent.mjs",
+    "test:syntax": "node --check app.js && node --check province-attractions.js && node --check attraction-knowledge.js && node --check national-scenic-knowledge.js && node --check knowledge-db.js && node --check travel-apis.js && node --check local-llm.js && node --check scripts/generate-national-scenic.mjs && node --check scripts/travel-agent.mjs && node --check api/travel-agent.js && node --check api/local-llm.js",
     "test:e2e": "playwright test",
     "test:e2e:dist": "npm run build && playwright test --config=playwright.dist.config.js",
     "test": "npm run test:syntax && npm run test:e2e"

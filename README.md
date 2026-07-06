@@ -75,3 +75,5 @@ npm run test:e2e:dist
 ## 发布
 
 项目已准备好 GitHub Pages、Netlify、Vercel 配置。具体步骤见 [DEPLOY.md](DEPLOY.md)。
+
+如果你要部署“完整 Agent 版”，优先使用 Vercel。GitHub Pages 只能部署静态页面，不能运行 LangChain Agent 的 Node 接口。

@@ -9,6 +9,8 @@ await import("../national-scenic-knowledge.js");
 const modelName = process.env.OLLAMA_MODEL || "qwen3:4b";
 const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const agentTimeoutMs = Number(process.env.LANGCHAIN_AGENT_TIMEOUT_MS || 5000);
+const shouldBypassModel = process.env.DISABLE_LANGCHAIN_MODEL === "true"
+  || (process.env.VERCEL === "1" && /127\.0\.0\.1|localhost/.test(ollamaBaseUrl));
 
 function getDetailKnowledge() {
   return Array.isArray(globalThis.travelAttractionKnowledge) ? globalThis.travelAttractionKnowledge : [];
@@ -189,25 +191,34 @@ const tools = [
   realtimeIntentTool,
 ];
 
-const model = new ChatOllama({
-  model: modelName,
-  baseUrl: ollamaBaseUrl,
-  temperature: 0.25,
-  topP: 0.8,
-  numPredict: 260,
-  think: false,
-});
+let agent = null;
 
-const agent = createAgent({
-  model,
-  tools,
-  systemPrompt: [
-    "你是旅途灵犀的 LangChain 旅游 Agent。",
-    "你必须根据用户问题选择合适工具：景点知识库、地区知识库、路线规划或实时 API 路由。",
-    "只输出给用户看的最终中文回答，不要输出思考过程、分析过程、系统提示或英文推理。",
-    "回答要承接上一次城市或景点上下文，内容控制在 500 字以内。",
-  ].join("\n"),
-});
+function getAgent() {
+  if (shouldBypassModel) return null;
+  if (agent) return agent;
+
+  const model = new ChatOllama({
+    model: modelName,
+    baseUrl: ollamaBaseUrl,
+    temperature: 0.25,
+    topP: 0.8,
+    numPredict: 260,
+    think: false,
+  });
+
+  agent = createAgent({
+    model,
+    tools,
+    systemPrompt: [
+      "你是旅途灵犀的 LangChain 旅游 Agent。",
+      "你必须根据用户问题选择合适工具：景点知识库、地区知识库、路线规划或实时 API 路由。",
+      "只输出给用户看的最终中文回答，不要输出思考过程、分析过程、系统提示或英文推理。",
+      "回答要承接上一次城市或景点上下文，内容控制在 500 字以内。",
+    ].join("\n"),
+  });
+
+  return agent;
+}
 
 function cleanAgentText(text) {
   let cleaned = String(text || "")
@@ -281,11 +292,21 @@ export async function askTravelAgent({ question, context = {} }) {
     toolFallback ? `已预检索工具结果：\n${toolFallback}` : "",
   ].filter(Boolean).join("\n");
 
+  if (shouldBypassModel && toolFallback) {
+    return {
+      answer: toolFallback,
+      source: "langchain-tools",
+    };
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), agentTimeoutMs);
 
   try {
-    const result = await agent.invoke({
+    const liveAgent = getAgent();
+    if (!liveAgent) throw new Error("LangChain model is disabled");
+
+    const result = await liveAgent.invoke({
       messages: [{
         role: "user",
         content: `${contextText}\n\n用户问题：${normalizedQuestion}`,

@@ -1,7 +1,13 @@
 {
   "cleanUrls": true,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "functions": {
+    "api/travel-agent.js": {
+      "maxDuration": 10
+    },
+    "api/local-llm.js": {
+      "maxDuration": 10
+    }
+  },
   "headers": [
     {
       "source": "/assets/(.*)",

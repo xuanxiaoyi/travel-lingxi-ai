@@ -1,6 +1,9 @@
 # 网站发布说明
 
-这个项目是纯静态网站，可以部署到 GitHub Pages、Netlify、Vercel 或任意静态网站托管平台。
+这个项目可以以两种模式部署：
+
+- 静态模式：部署页面、知识库和前端交互，适合 GitHub Pages
+- Agent 模式：部署页面加 `/api/travel-agent`、`/api/local-llm`，适合 Vercel
 
 ## 本地预览
 
@@ -44,10 +47,22 @@ npm run test:e2e
 
 1. 登录 Vercel。
 2. 导入 GitHub 仓库。
-3. Framework Preset 选择 `Other`，构建命令使用 `npm run build`，输出目录使用 `dist`。
+3. Framework Preset 选择 `Other`。
+4. 不需要填写 `Output Directory`，直接使用仓库根目录部署静态文件和 `api/` 函数。
+5. 如果只是想让线上版本稳定可用，不需要额外环境变量，LangChain Agent 会自动退回工具检索模式。
+6. 如果希望线上版本真的调用 Ollama / 大模型，需要配置可公网访问的模型地址：
+
+```bash
+OLLAMA_BASE_URL=https://your-ollama-endpoint
+OLLAMA_MODEL=qwen3:4b
+```
+
+7. 如果没有公网模型地址，不要把 `OLLAMA_BASE_URL` 指向 `127.0.0.1` 或 `localhost`，Vercel 云函数无法访问你的本机模型。
 
 ## 注意
 
 天气、时间、定位、汇率接口依赖第三方公共 API。公开部署后建议使用 HTTPS，浏览器定位功能在 HTTPS 下体验最好。
 
-本地大模型兜底依赖访问者自己的电脑运行 Ollama 和 `qwen3:4b`。它不会上传模型到网站服务器；没有本地模型时，网站仍会正常使用知识库和实时 API。
+GitHub Pages 只能运行静态页面，不能运行 LangChain Agent 的 Node 接口。
+
+Vercel 可以运行 `api/` 下的 Serverless Functions，但默认也访问不到你本机的 Ollama。没有公网模型地址时，线上版本会自动退回知识库检索和规则路线生成，不会报错。
