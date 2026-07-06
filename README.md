@@ -7,6 +7,7 @@
 - 城市推荐与景点弹窗介绍
 - AI 旅游助手问答
 - 全国省份景区知识库
+- 国家5A级旅游景区补充知识库，包含介绍、亮点、季节和游玩建议
 - 高频景点详细知识库
 - 浏览器 IndexedDB 本地知识库存储
 - 天气、时间、定位、汇率等实时 API 查询
@@ -30,6 +31,7 @@
 - `app.js`：页面交互和问答逻辑
 - `province-attractions.js`：全国省份景区基础知识库
 - `attraction-knowledge.js`：高频景点详细知识库
+- `national-scenic-knowledge.js`：国家5A级旅游景区补充知识库，包含结构化介绍资料
 - `knowledge-db.js`：浏览器本地数据库 IndexedDB
 - `travel-apis.js`：天气、时间、定位、汇率 API
 - `local-llm.js`：本地大模型 qwen3:4b 兜底调用

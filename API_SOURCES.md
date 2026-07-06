@@ -13,6 +13,7 @@
 | 逆地理编码 | BigDataCloud Reverse Geocode Client | 把经纬度转成城市、省份、国家 |
 | IP 定位兜底 | ipwho.is | 浏览器定位被拒绝时，使用 IP 粗略定位 |
 | 汇率 | Frankfurter API / ExchangeRate API | 查询人民币到美元、日元、欧元、韩元、泰铢等旅行常用汇率 |
+| 景区名录 | 文化和旅游部数据服务 | 抓取国家5A级旅游景区名单，并生成结构化景区介绍资料 |
 
 ## 使用方式
 

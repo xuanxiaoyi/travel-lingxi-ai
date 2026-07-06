@@ -10,6 +10,7 @@ const files = [
   "styles.css",
   "province-attractions.js",
   "attraction-knowledge.js",
+  "national-scenic-knowledge.js",
   "knowledge-db.js",
   "travel-apis.js",
   "local-llm.js",

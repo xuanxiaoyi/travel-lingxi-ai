@@ -54,6 +54,7 @@ const TravelKnowledgeDB = (() => {
     const records = [];
     const detailed = Array.isArray(globalThis.travelAttractionKnowledge) ? globalThis.travelAttractionKnowledge : [];
     const regions = Array.isArray(globalThis.chinaProvinceScenicKnowledge) ? globalThis.chinaProvinceScenicKnowledge : [];
+    const national = Array.isArray(globalThis.nationalScenicKnowledge) ? globalThis.nationalScenicKnowledge : [];
 
     detailed.forEach((item) => {
       records.push({
@@ -79,6 +80,29 @@ const TravelKnowledgeDB = (() => {
           bestTime: region.season,
           foods: region.foods,
           source: "province",
+        });
+      });
+    });
+
+    national.forEach((region) => {
+      region.attractions?.forEach((item) => {
+        records.push({
+          id: `national-5a-${region.region}-${item.name}-${item.city || ""}`,
+          name: item.name,
+          aliases: item.aliases || [],
+          city: item.city,
+          region: item.region || region.region,
+          category: item.category,
+          summary: item.summary,
+          intro: item.intro || item.summary,
+          highlights: item.highlights || [],
+          tips: item.tips,
+          bestTime: item.bestTime || "建议结合当地季节和天气安排，热门假期提前预约。",
+          keywords: item.keywords || [],
+          dataSource: item.dataSource,
+          sourceUrl: item.sourceUrl,
+          officialName: item.officialName,
+          source: "national-5a",
         });
       });
     });
@@ -122,15 +146,25 @@ const TravelKnowledgeDB = (() => {
     return seedPromise;
   }
 
+  function extractSearchTokens(question) {
+    const cleaned = question
+      .replace(/我想去|想去|帮我|请问|一下|有哪些|哪里好玩|怎么玩|好玩吗|值得去吗|景点|景区|旅游|旅行|攻略|推荐|介绍|看什么|路线|安排/g, " ")
+      .replace(/[，。！？、,.!?]/g, " ");
+    return [...new Set((cleaned.match(/[\u4e00-\u9fa5A-Za-z0-9]{2,}/g) || []).filter((token) => token.length >= 2))];
+  }
+
   function scoreAttraction(item, question) {
     const text = `${item.name} ${item.aliases?.join(" ") || ""} ${item.city || ""} ${item.region || ""} ${item.category || ""} ${item.summary || ""}`;
     let score = 0;
     if (question.includes(item.name)) score += 120;
-    if (item.aliases?.some((alias) => question.includes(alias))) score += 110;
-    if (item.city && question.includes(item.city)) score += 28;
+    if (item.aliases?.some((alias) => question.includes(alias) || alias.includes(question))) score += 110;
+    if (item.city && question.includes(item.city)) score += 36;
     if (item.region && question.includes(item.region)) score += 18;
     if (item.category && question.includes(item.category)) score += 16;
-    ["古城", "历史", "文化", "海边", "海岛", "山水", "自然", "亲子", "美食", "夜景", "拍照", "徒步", "博物馆", "寺庙", "草原", "雪山", "湖泊"].forEach((keyword) => {
+    extractSearchTokens(question).forEach((token) => {
+      if (text.includes(token)) score += token.length >= 4 ? 18 : 10;
+    });
+    ["古城", "历史", "文化", "海边", "海岛", "山水", "自然", "亲子", "美食", "夜景", "拍照", "徒步", "博物馆", "寺庙", "草原", "雪山", "湖泊", "温泉", "古镇"].forEach((keyword) => {
       if (question.includes(keyword) && text.includes(keyword)) score += 8;
     });
     return score;

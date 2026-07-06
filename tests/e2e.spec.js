@@ -1,14 +1,18 @@
 import { expect, test } from "@playwright/test";
 
+test.setTimeout(360000);
+
 async function openAssistant(page) {
   await page.getByRole("button", { name: "打开AI旅游助手" }).click();
   await expect(page.getByLabel("AI旅游助手对话")).toBeVisible();
 }
 
 async function askAssistant(page, question, expected) {
+  await expect(page.getByRole("button", { name: "发送旅游问题" })).toBeEnabled({ timeout: 60000 });
   await page.getByLabel("输入你的旅游问题").fill(question);
   await page.getByRole("button", { name: "发送旅游问题" }).click();
   await expect(page.getByText(expected).last()).toBeVisible({ timeout: 45000 });
+  await expect(page.getByRole("button", { name: "发送旅游问题" })).toBeEnabled({ timeout: 60000 });
 }
 
 test.beforeEach(async ({ page }) => {
@@ -45,7 +49,7 @@ test.beforeEach(async ({ page }) => {
     await route.fulfill({ contentType: "application/json", body: JSON.stringify({ rates: { JPY: 22.3, USD: 0.14 } }) });
   });
 
-  await page.route("**/api/generate", async (route) => {
+  const fulfillLocalModel = async (route) => {
     const headers = {
       "access-control-allow-origin": "*",
       "access-control-allow-methods": "POST, OPTIONS",
@@ -66,7 +70,10 @@ test.beforeEach(async ({ page }) => {
         done: true,
       }),
     });
-  });
+  };
+
+  await page.route("**/api/local-llm", fulfillLocalModel);
+  await page.route("**/api/generate", fulfillLocalModel);
 });
 
 test("首页核心流程：推荐、弹窗、AI问答、实时天气", async ({ page }) => {
@@ -96,7 +103,17 @@ test("更多城市页：城市卡片和知识库问答可用", async ({ page }) 
   await page.getByRole("button", { name: "关闭城市详情" }).click();
 
   await openAssistant(page);
+  await askAssistant(page, "告诉我厦门", "厦门很适合轻松旅行");
   await askAssistant(page, "浙江景点推荐", "普陀山");
+  await askAssistant(page, "南充景点推荐", "阆中古城");
+  await askAssistant(page, "介绍阆中古城", "古城街巷");
+  await askAssistant(page, "介绍一下万峰林", "万峰林景区");
+  await askAssistant(page, "给我安排情侣游", "不用重新告诉我目的地");
+  await askAssistant(page, "好的", "我接着刚才的");
+  await askAssistant(page, "列举5个5A级景区", "全国代表性5个5A级景区");
+  await askAssistant(page, "列举5个贵州5A级景区", "贵州5个5A级景区");
+  await askAssistant(page, "阿勒泰哪里好玩", "喀纳斯");
+  await askAssistant(page, "谢谢", "祝你旅途顺利");
 });
 
 test("静态站点没有控制台错误，主要资源加载完成", async ({ page }) => {

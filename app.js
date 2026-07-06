@@ -5,6 +5,7 @@ const chatMessages = document.getElementById("chatMessages");
 const chatForm = document.getElementById("chatForm");
 const chatInput = document.getElementById("chatInput");
 const chatSend = document.querySelector(".chat-send");
+const chatPromptButtons = document.querySelectorAll("[data-chat-prompt]");
 const cityDialog = document.getElementById("cityDialog");
 const dialogClose = document.querySelector(".dialog-close");
 const dialogImage = document.getElementById("dialogImage");
@@ -539,6 +540,7 @@ const cityAttractionDetails = Object.fromEntries(
 let activeCityKey = "";
 let chatIsStreaming = false;
 let lastCityKey = "";
+let lastAttractionContext = null;
 
 function setDialogImage(cityKey, detail, attractionDetail) {
   activeCityKey = cityKey;
@@ -755,19 +757,47 @@ function updateChatInputState() {
   chatForm?.classList.toggle("has-input", Boolean(chatInput?.value.length));
 }
 
+function submitChatQuestion(question) {
+  if (!question.trim() || chatIsStreaming) return;
+
+  addChatMessage("user", question);
+  chatInput.value = "";
+  updateChatInputState();
+  chatIsStreaming = true;
+  chatSend.disabled = true;
+
+  const thinkingBubble = addChatMessage("bot", "正在整理旅行灵感");
+  thinkingBubble.classList.add("is-thinking");
+
+  window.setTimeout(async () => {
+    let response = "";
+    try {
+      response = await getBotResponse(question);
+    } catch {
+      response = "刚刚调用实时接口时出现了问题，我先保留原来的旅游路线能力。你可以稍后再试一次天气、时间、定位或汇率查询。";
+    }
+    thinkingBubble.classList.remove("is-thinking");
+    streamText(thinkingBubble, response);
+  }, 1000 + Math.round(Math.random() * 2000));
+}
+
 function openChatPanel() {
   if (!chatPanel || !chatButton) return;
   chatPanel.hidden = false;
+  chatPanel.classList.add("is-open");
+  document.body.classList.add("chat-open");
   chatButton.setAttribute("aria-expanded", "true");
   chatInput?.focus();
   if (!chatMessages.dataset.ready) {
-    addChatMessage("bot", "嗨嗨～👋 看到你好开心呀！今天是想聊聊旅行计划，还是需要我推荐一些超棒的目的地呢？");
+    addChatMessage("bot", "你好！我是AI旅游助手，可以帮你规划旅游路线、推荐景点、查询天气和整理旅行建议。你可以直接说目的地、天数和偏好。✈️");
     chatMessages.dataset.ready = "true";
   }
 }
 
 function closeChatPanel() {
   if (!chatPanel || !chatButton) return;
+  chatPanel.classList.remove("is-open");
+  document.body.classList.remove("chat-open");
   chatPanel.hidden = true;
   chatButton.setAttribute("aria-expanded", "false");
 }
@@ -787,6 +817,10 @@ function getProvinceKnowledge() {
 
 function getAttractionDetailKnowledge() {
   return Array.isArray(globalThis.travelAttractionKnowledge) ? globalThis.travelAttractionKnowledge : [];
+}
+
+function getNationalScenicKnowledge() {
+  return Array.isArray(globalThis.nationalScenicKnowledge) ? globalThis.nationalScenicKnowledge : [];
 }
 
 function getAttractionKnowledgeBase() {
@@ -820,6 +854,30 @@ function getAttractionKnowledgeBase() {
     });
   });
 
+  getNationalScenicKnowledge().forEach((region) => {
+    region.attractions?.forEach((attraction) => {
+      const key = `${attraction.name}-${attraction.city || region.region}`;
+      if (items.has(key)) return;
+      items.set(key, {
+        name: attraction.name,
+        aliases: attraction.aliases || [],
+        city: attraction.city,
+        region: attraction.region || region.region,
+        category: attraction.category,
+        summary: attraction.summary,
+        intro: attraction.intro || attraction.summary,
+        highlights: attraction.highlights,
+        tips: attraction.tips,
+        bestTime: attraction.bestTime || "建议结合当地季节和天气安排，热门假期提前预约。",
+        keywords: attraction.keywords || [],
+        dataSource: attraction.dataSource,
+        sourceUrl: attraction.sourceUrl,
+        source: "national-5a",
+        officialName: attraction.officialName,
+      });
+    });
+  });
+
   Object.values(cityGuides).forEach((guide) => {
     guide.attractions.forEach(([name, summary, tip]) => {
       const key = `${name}-${guide.title}`;
@@ -848,17 +906,75 @@ function findRegionKnowledge(question) {
   });
 }
 
+function getNationalScenicAttractions() {
+  return getNationalScenicKnowledge().flatMap((region) => (
+    region.attractions || []
+  ).map((item) => ({
+    ...item,
+    region: item.region || region.region,
+    source: "national-5a",
+  })));
+}
+
+function findNationalScenicRegion(question) {
+  return getNationalScenicKnowledge().find((region) => question.includes(region.region));
+}
+
+function isFiveAIntent(question) {
+  return /(5A|5a|五A|五a|5A级|五A级|AAAAA|国家5A|国家级景区|国家级旅游景区)/.test(question);
+}
+
+function parseListCount(question, fallback = 5) {
+  const arabic = question.match(/(\d+)\s*(个|处|条|家)?/);
+  if (arabic) return Math.min(Math.max(Number(arabic[1]), 1), 10);
+  const chineseMap = { 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10 };
+  const chinese = question.match(/([一二两三四五六七八九十])\s*(个|处|条|家)/);
+  return chinese ? chineseMap[chinese[1]] || fallback : fallback;
+}
+
+function buildFiveAListAnswer(question) {
+  const count = parseListCount(question, 5);
+  const scopedRegion = findNationalScenicRegion(question);
+  const all = scopedRegion
+    ? (scopedRegion.attractions || []).map((item) => ({ ...item, region: item.region || scopedRegion.region }))
+    : getNationalScenicAttractions();
+  const tokens = extractSearchTokens(question).filter((token) => !/5A|5a|五A|五a|国家|景区|旅游|列举/.test(token));
+  const scored = all
+    .map((item, index) => {
+      const text = `${item.name} ${item.officialName || ""} ${item.aliases?.join(" ") || ""} ${item.city || ""} ${item.region || ""} ${item.category || ""} ${item.keywords?.join(" ") || ""}`;
+      const tokenScore = tokens.reduce((score, token) => score + (text.includes(token) ? 20 : 0), 0);
+      const categoryScore = question.includes(item.category || "") ? 12 : 0;
+      return { ...item, score: tokenScore + categoryScore + Math.max(0, 8 - index * 0.01) };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, count);
+
+  const title = scopedRegion ? `${scopedRegion.region}${count}个5A级景区` : `全国代表性${count}个5A级景区`;
+  return `可以，下面给你列举 **${title}**：\n\n${scored.map((item, index) => `${index + 1}. **${item.name}**${item.city ? `（${item.region} / ${item.city}）` : item.region ? `（${item.region}）` : ""}\n   ${item.intro || item.summary}\n   小贴士：${item.tips || "出发前确认开放时间、预约要求和交通方式。"}`).join("\n")}\n\n如果你想继续，我可以把其中任意一个景区展开成“景点介绍、情侣游、亲子游、拍照路线或1日游安排”。`;
+}
+
+function extractSearchTokens(question) {
+  const cleaned = question
+    .replace(/我想去|想去|帮我|请问|一下|有哪些|哪里好玩|怎么玩|好玩吗|值得去吗|景点|景区|旅游|旅行|攻略|推荐|介绍|看什么|路线|安排/g, " ")
+    .replace(/[，。！？、,.!?]/g, " ");
+  return [...new Set((cleaned.match(/[\u4e00-\u9fa5A-Za-z0-9]{2,}/g) || []).filter((token) => token.length >= 2))];
+}
+
 function scoreAttraction(item, question) {
   const text = `${item.name} ${item.aliases?.join(" ") || ""} ${item.city || ""} ${item.region || ""} ${item.category || ""} ${item.summary || ""}`;
   let score = 0;
 
   if (question.includes(item.name)) score += 120;
-  if (item.aliases?.some((alias) => question.includes(alias))) score += 110;
-  if (item.city && question.includes(item.city)) score += 28;
+  if (item.aliases?.some((alias) => question.includes(alias) || alias.includes(question))) score += 110;
+  if (item.city && question.includes(item.city)) score += 36;
   if (item.region && question.includes(item.region)) score += 18;
   if (item.category && question.includes(item.category)) score += 16;
 
-  ["古城", "历史", "文化", "海边", "海岛", "山水", "自然", "亲子", "美食", "夜景", "拍照", "徒步", "博物馆"].forEach((keyword) => {
+  extractSearchTokens(question).forEach((token) => {
+    if (text.includes(token)) score += token.length >= 4 ? 18 : 10;
+  });
+
+  ["古城", "历史", "文化", "海边", "海岛", "山水", "自然", "亲子", "美食", "夜景", "拍照", "徒步", "博物馆", "寺庙", "草原", "雪山", "湖泊", "温泉", "古镇"].forEach((keyword) => {
     if (question.includes(keyword) && text.includes(keyword)) score += 8;
   });
 
@@ -900,6 +1016,7 @@ async function findRegionKnowledgeFromDB(question) {
 }
 
 function buildAttractionAnswer(item) {
+  lastAttractionContext = item;
   const highlights = item.highlights?.length
     ? item.highlights.map((highlight) => `- ${highlight}`).join("\n")
     : `- ${item.summary || item.intro}\n- 适合结合${item.category || "当地特色"}安排半日到一日游`;
@@ -907,6 +1024,13 @@ function buildAttractionAnswer(item) {
   const foods = item.foods?.length ? `\n\n### 当地美食\n${item.foods.slice(0, 4).map((name) => `- ${name}`).join("\n")}` : "";
 
   return `当然可以～下面是 **${item.name}** 的景点介绍：\n\n### 基本印象\n${item.intro || item.summary}\n\n### 适合看什么\n${highlights}\n\n### 游玩建议\n- 所在地：${[item.region, item.city].filter(Boolean).join(" / ") || "国内景区"}\n- 类型：${item.category || "综合景区"}\n- 推荐时间：${item.bestTime || "建议结合季节和天气安排"}\n- 小贴士：${item.tips || "出发前确认开放时间、交通方式和当天客流"}${nearby}${foods}\n\n如果你要去这里，我也可以继续帮你安排“半日游、1日游、亲子游、情侣游或拍照路线”。`;
+}
+
+function buildMatchedAttractionsAnswer(question, matches) {
+  const place = extractSearchTokens(question).find((token) => matches.some((item) => item.region?.includes(token) || item.city?.includes(token) || item.name?.includes(token))) || "相关地区";
+  const uniqueMatches = matches.filter((item, index, arr) => arr.findIndex((candidate) => candidate.name === item.name && candidate.region === item.region) === index).slice(0, 8);
+
+  return `我按你的输入搜索到了这些更相关的景点，先给你一组可选项：\n\n${uniqueMatches.map((item, index) => `${index + 1}. **${item.name}**${item.city ? `（${item.city}）` : item.region ? `（${item.region}）` : ""}：${item.summary || item.intro}\n   小贴士：${item.tips || "建议提前确认开放时间、预约和交通方式。"}`).join("\n")}\n\n如果你想继续，我可以直接把${place}整理成“2天路线、情侣路线、亲子路线或美食路线”。`;
 }
 
 function buildCityAttractionAnswer(cityKey) {
@@ -934,8 +1058,8 @@ function buildRoute(guide, days, preference = "") {
   const spots = guide.attractions.map(([name]) => name);
   const tips = guide.tips?.length ? guide.tips : ["热门景点建议提前确认开放时间和预约要求。", "景点之间距离较远时，优先按区域顺路安排。", "如果天气变化明显，可以把室外景点和室内展馆互相替换。"];
   const dayLines = Array.from({ length: days }, (_, index) => {
-    const a = spots[(index * 2) % spots.length];
-    const b = spots[(index * 2 + 1) % spots.length];
+    const a = spots[index * 2] || `${guide.title}街区慢游`;
+    const b = spots[index * 2 + 1] || (index === days - 1 ? "伴手礼、咖啡休息或返程前轻松散步" : `${guide.title}周边顺路景点`);
     const night = index === days - 1 ? "整理行李，按返程时间轻松收尾" : "安排夜景、老街或当地美食";
     return `#### 第${index + 1}天\n- **上午**：前往${a}，先看最有代表性的景观。\n- **下午**：继续游览${b}，把自然风光或人文体验补完整。\n- **晚上**：${night}。`;
   }).join("\n\n");
@@ -943,17 +1067,63 @@ function buildRoute(guide, days, preference = "") {
   return `哇塞🥰 ${guide.title}很适合${preference || "轻松旅行"}，我按${days}天给你整理一版路线～\n\n### 经典${days}日游路线\n${dayLines}\n\n### 其他景点推荐\n${guide.attractions.map(([name, description]) => `- **${name}**：${description}`).join("\n")}\n\n### 旅行小贴士\n${tips.map((tip) => `- ${tip}`).join("\n")}\n\n如果你想继续细化，我可以再按“情侣游、亲子游、美食游、预算、省力路线”继续调整。`;
 }
 
+function getPreferenceLabel(question) {
+  if (question.includes("情侣")) return "情侣慢游";
+  if (question.includes("亲子")) return "亲子旅行";
+  if (question.includes("美食")) return "美食游";
+  if (question.includes("历史") || question.includes("文化")) return "历史文化游";
+  if (question.includes("海边") || question.includes("海岛") || question.includes("看海")) return "海边度假";
+  if (question.includes("自然") || question.includes("山水")) return "自然风光游";
+  if (question.includes("拍照")) return "拍照路线";
+  if (question.includes("省力") || question.includes("轻松")) return "轻松省力";
+  return "轻松旅行";
+}
+
+function buildAttractionRoute(item, question) {
+  const days = /(\d+)\s*天/.test(question) ? parseDays(question) : 1;
+  const preference = getPreferenceLabel(question);
+  const name = item.name;
+  const highlights = item.highlights?.length ? item.highlights.slice(0, 3) : [item.summary || item.intro, "适合结合当地特色安排轻松游览"];
+  const nearby = item.nearby?.length ? item.nearby.slice(0, 3) : [];
+  const romanticDetails = preference.includes("情侣")
+    ? ["把核心观景时间放在清晨或傍晚，光线柔和、人也相对少。", "中午安排轻松用餐或咖啡休息，不要把路线排得太赶。", "留一段慢走和拍照时间，比赶景点更适合情侣游。"]
+    : ["按体力把核心景点放在前半天，后半天安排轻松体验。", "热门区域提前预约并错峰进入。", "天气变化明显时，把户外观景和室内休息灵活调换。"];
+  const dayLines = Array.from({ length: days }, (_, index) => {
+    if (days === 1) {
+      return `#### 第1天：${name}${preference}\n- **上午**：先进入${name}核心区域，优先看${highlights[0]}。\n- **中午**：在景区周边或${item.city || item.region || "当地"}找一家安静餐厅休息，节奏放慢。\n- **下午**：继续看${highlights[1] || "代表性景观"}，预留拍照和散步时间。\n- **晚上**：${preference.includes("情侣") ? "如果周边有夜景、老街或观景点，可以安排轻松散步收尾。" : "按交通和体力轻松返程。"}`;
+    }
+
+    const focus = index === 0 ? name : nearby[index - 1] || `${item.city || item.region || "当地"}周边`;
+    return `#### 第${index + 1}天：${focus}\n- **上午**：围绕${focus}安排核心游览，避免一开始就赶路。\n- **下午**：补充${highlights[index % highlights.length] || "当地代表性体验"}，根据天气调整节奏。\n- **晚上**：${index === days - 1 ? "整理行程，按返程时间轻松收尾。" : "安排慢走、夜景或当地餐食。"}`;
+  }).join("\n\n");
+
+  return `可以呀～我接着刚才的 **${name}** 来安排，不用重新告诉我目的地。\n\n### ${name}${days}天${preference}建议\n${dayLines}\n\n### 重点体验\n${highlights.map((highlight) => `- ${highlight}`).join("\n")}${nearby.length ? `\n\n### 顺路搭配\n${nearby.map((spot) => `- ${spot}`).join("\n")}` : ""}\n\n### 情侣游小贴士\n${romanticDetails.map((tip) => `- ${tip}`).join("\n")}\n\n如果你愿意，我还可以继续把它细化成“上午几点出发、怎么坐车、吃什么、拍照点怎么排”。`;
+}
+
 function buildCityAnswer(cityKey, question) {
   const guide = cityGuides[cityKey] || extraGuides[cityKey];
   if (!guide) return "";
   lastCityKey = cityKey;
   const days = /(\d+)\s*天/.test(question) ? parseDays(question) : 3;
-  const preference = question.includes("情侣") ? "情侣慢游" : question.includes("亲子") ? "亲子旅行" : question.includes("美食") ? "美食游" : "";
+  const preference = getPreferenceLabel(question);
   return buildRoute(guide, days, preference);
 }
 
 function buildClarificationAnswer() {
   return "我还需要更多信息，才能安排得更准确一点哦～😊\n\n你可以按这个格式告诉我：\n- 想去的城市：例如杭州、台州、绍兴、黄山、敦煌、喀什、广州、长沙等\n- 出行天数：例如2天、3天、5天\n- 偏好：历史文化、美食、亲子、海边、自然风光、拍照、轻松慢游";
+}
+
+function isBriefAcknowledgement(question) {
+  return /^(好|好的|可以|行|嗯|嗯嗯|好呀|好啊|OK|ok|继续|安排吧|你来安排)$/i.test(question.replace(/\s+/g, ""));
+}
+
+function isFarewellIntent(question) {
+  return /^(谢谢|谢了|感谢|不用了|没了|没有了|先这样|就这样|结束|再见|拜拜|bye|goodbye|下次再说)$/i.test(question.replace(/\s+/g, ""));
+}
+
+function buildFarewellAnswer() {
+  const target = lastAttractionContext?.name || ((lastCityKey && (cityGuides[lastCityKey] || extraGuides[lastCityKey])?.title) || "");
+  return `${target ? `好的，${target}的行程我先帮你整理到这里。` : "好的，这次旅行规划先到这里。"}祝你旅途顺利，玩得开心～如果后面还想查天气、路线、景点介绍或调整天数，随时再来找我。`;
 }
 
 async function getLocalModelFallback(question, context = {}) {
@@ -966,10 +1136,25 @@ async function getLocalModelFallback(question, context = {}) {
   }
 }
 
+function buildSmartFallbackAnswer(question) {
+  if (lastAttractionContext) {
+    return buildAttractionRoute(lastAttractionContext, question);
+  }
+
+  const lastGuide = (lastCityKey && (cityGuides[lastCityKey] || extraGuides[lastCityKey])) || null;
+  if (lastGuide) {
+    return buildRoute(lastGuide, parseDays(question), getPreferenceLabel(question));
+  }
+
+  const hot = getAttractionKnowledgeBase().slice(0, 5);
+  return `我先按常见旅行场景给你一个可执行方向：\n\n${hot.map((item, index) => `${index + 1}. **${item.name}**${item.city ? `（${item.city}）` : ""}：${item.summary || item.intro}`).join("\n")}\n\n如果你还没确定目的地，可以直接说“想看海”“想去古城”“2天情侣游”“亲子游”，我会继续帮你收窄范围并安排路线。`;
+}
+
 async function getBotResponse(question) {
   const normalized = question.replace(/\s+/g, "");
   const cityKey = findCityKey(question);
   const lastGuide = (lastCityKey && (cityGuides[lastCityKey] || extraGuides[lastCityKey])) || null;
+  const followUpIntent = /(\d+\s*天|情侣|亲子|美食|轻松|拍照|省力|半日|一日|1日|路线|安排|怎么玩)/.test(question);
 
   try {
     const realtimeAnswer = typeof TravelApis !== "undefined" ? await TravelApis.handleRealtimeIntent(question, {
@@ -986,8 +1171,16 @@ async function getBotResponse(question) {
       : "嗨嗨～👋 看到你好开心呀！今天是想聊聊旅行计划，还是需要我推荐一些超棒的目的地呢？无论是浪漫海岛、文化古城，还是美食天堂，我都能帮你找到旅行灵感哦！";
   }
 
+  if (isFarewellIntent(question)) {
+    return buildFarewellAnswer();
+  }
+
+  if (isFiveAIntent(question)) {
+    return buildFiveAListAnswer(question);
+  }
+
   const attractionIntent = /景点|景区|介绍|怎么玩|值得|好玩吗|哪里好玩|游玩|攻略|推荐|看什么/.test(question);
-  const attractionMatches = await findAttractionMatchesFromKnowledge(question);
+  const attractionMatches = await findAttractionMatchesFromKnowledge(question, 8);
   if (attractionMatches[0]?.score >= 80) {
     return buildAttractionAnswer(attractionMatches[0]);
   }
@@ -1002,13 +1195,24 @@ async function getBotResponse(question) {
   }
 
   if (attractionIntent && !cityKey && attractionMatches.length) {
-    return buildAttractionAnswer(attractionMatches[0]);
+    const listIntent = /景点|景区|哪里好玩|有哪些|推荐|看什么|旅游|攻略/.test(question) && !/介绍|好玩吗|值得|怎么玩/.test(question);
+    return listIntent && attractionMatches.length > 1
+      ? buildMatchedAttractionsAnswer(question, attractionMatches)
+      : buildAttractionAnswer(attractionMatches[0]);
   }
 
   if (cityKey) return buildCityAnswer(cityKey, question);
 
-  if (lastGuide && /(\d+\s*天|情侣|亲子|美食|轻松|拍照|省力)/.test(question)) {
-    return buildRoute(lastGuide, parseDays(question), question.includes("情侣") ? "情侣慢游" : question);
+  if (lastAttractionContext && followUpIntent) {
+    return buildAttractionRoute(lastAttractionContext, question);
+  }
+
+  if (lastGuide && followUpIntent) {
+    return buildRoute(lastGuide, parseDays(question), getPreferenceLabel(question));
+  }
+
+  if (isBriefAcknowledgement(question) && (lastAttractionContext || lastGuide)) {
+    return buildSmartFallbackAnswer(question);
   }
 
   if (/海边|海岛|看海/.test(question)) {
@@ -1021,8 +1225,9 @@ async function getBotResponse(question) {
 
   const localAnswer = await getLocalModelFallback(question, {
     lastCityTitle: lastGuide?.title || "",
+    lastAttractionName: lastAttractionContext?.name || "",
   });
-  return localAnswer || buildClarificationAnswer();
+  return localAnswer || buildSmartFallbackAnswer(question);
 }
 
 function streamText(bubble, text) {
@@ -1032,13 +1237,17 @@ function streamText(bubble, text) {
   bubble.textContent = "";
 
   let index = 0;
+  const chunkSize = text.length > 1200 ? 3 : text.length > 650 ? 2 : 1;
+  const tickDelay = text.length > 1200 ? 34 : text.length > 650 ? 30 : 26;
   const step = () => {
-    bubble.textContent += text[index] || "";
-    index += 1;
+    const isLineBreak = text[index] === "\n";
+    const chunk = isLineBreak ? "\n" : text.slice(index, index + chunkSize);
+    bubble.textContent += chunk;
+    index += chunk.length;
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
     if (index < text.length) {
-      window.setTimeout(step, text[index - 1] === "\n" ? 90 : 26);
+      window.setTimeout(step, isLineBreak ? 80 : tickDelay);
       return;
     }
 
@@ -1053,33 +1262,16 @@ function streamText(bubble, text) {
 chatButton?.addEventListener("click", openChatPanel);
 chatClose?.addEventListener("click", closeChatPanel);
 chatInput?.addEventListener("input", updateChatInputState);
+chatPromptButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    openChatPanel();
+    submitChatQuestion(button.dataset.chatPrompt || "");
+  });
+});
 
 chatForm?.addEventListener("submit", (event) => {
   event.preventDefault();
-  if (chatIsStreaming) return;
-
-  const question = chatInput.value;
-  if (!question.trim()) return;
-
-  addChatMessage("user", question);
-  chatInput.value = "";
-  updateChatInputState();
-  chatIsStreaming = true;
-  chatSend.disabled = true;
-
-  const thinkingBubble = addChatMessage("bot", "正在整理旅行灵感");
-  thinkingBubble.classList.add("is-thinking");
-
-  window.setTimeout(async () => {
-    let response = "";
-    try {
-      response = await getBotResponse(question);
-    } catch {
-      response = "刚刚调用实时接口时出现了问题，我先保留原来的旅游路线能力。你可以稍后再试一次天气、时间、定位或汇率查询。";
-    }
-    thinkingBubble.classList.remove("is-thinking");
-    streamText(thinkingBubble, response);
-  }, 1000 + Math.round(Math.random() * 2000));
+  submitChatQuestion(chatInput.value);
 });
 
 document.addEventListener("keydown", (event) => {

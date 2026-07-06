@@ -8,6 +8,8 @@ const port = Number(portArg?.split("=")[1] || process.env.PORT || 4173);
 const rootArg = args.find((arg) => arg.startsWith("--root="));
 const serveRoot = rootArg?.split("=")[1] || process.env.SERVE_ROOT || ".";
 const root = resolve(process.cwd(), serveRoot);
+const ollamaEndpoint = process.env.OLLAMA_ENDPOINT || "http://127.0.0.1:11434/api/generate";
+const ollamaTimeoutMs = Number(process.env.OLLAMA_TIMEOUT_MS || 7000);
 
 const types = {
   ".html": "text/html; charset=utf-8",
@@ -32,7 +34,74 @@ function resolveRequestPath(url) {
   return target;
 }
 
+function readRequestBody(request) {
+  return new Promise((resolveBody, rejectBody) => {
+    let body = "";
+    request.setEncoding("utf8");
+    request.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 1024 * 1024) {
+        rejectBody(new Error("Request body too large"));
+        request.destroy();
+      }
+    });
+    request.on("end", () => resolveBody(body));
+    request.on("error", rejectBody);
+  });
+}
+
+async function handleLocalLlmProxy(request, response) {
+  if (request.method === "OPTIONS") {
+    response.writeHead(204, {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "POST, OPTIONS",
+      "access-control-allow-headers": "content-type",
+    });
+    response.end();
+    return;
+  }
+
+  if (request.method !== "POST") {
+    response.writeHead(405, { "content-type": "application/json; charset=utf-8" });
+    response.end(JSON.stringify({ error: "Method not allowed" }));
+    return;
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ollamaTimeoutMs);
+
+  try {
+    const body = await readRequestBody(request);
+    const upstream = await fetch(ollamaEndpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      signal: controller.signal,
+      body,
+    });
+    const text = await upstream.text();
+    response.writeHead(upstream.status, {
+      "content-type": upstream.headers.get("content-type") || "application/json; charset=utf-8",
+      "access-control-allow-origin": "*",
+    });
+    response.end(text);
+  } catch (error) {
+    response.writeHead(502, {
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": "*",
+    });
+    response.end(JSON.stringify({ error: "Local LLM unavailable", detail: error.message }));
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 createServer((request, response) => {
+  const pathname = new URL(request.url || "/", `http://localhost:${port}`).pathname;
+  if (pathname === "/api/local-llm") {
+    handleLocalLlmProxy(request, response);
+    return;
+  }
+
   const target = resolveRequestPath(request.url || "/");
   if (!target || !existsSync(target) || !statSync(target).isFile()) {
     response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
