@@ -1,0 +1,122 @@
+[
+  {
+    "city": "beijing",
+    "query": "Forbidden City Beijing panoramic",
+    "title": "File:Forbidden City panorama from Gate of Supreme Harmony.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Forbidden_City_panorama_from_Gate_of_Supreme_Harmony.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Daniel Case"
+  },
+  {
+    "city": "shanghai",
+    "query": "Shanghai Pudong skyline night",
+    "title": "File:Pudong CBD viewed from the North Bund in Shanghai.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Pudong_CBD_viewed_from_the_North_Bund_in_Shanghai.jpg",
+    "license": "CC BY-SA 2.0",
+    "author": "David Zhang from Canada"
+  },
+  {
+    "city": "hangzhou",
+    "query": "West Lake Hangzhou panorama",
+    "title": "File:Aerial panorama of West Lake and its surrounding mountains. December 2023.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Aerial_panorama_of_West_Lake_and_its_surrounding_mountains._December_2023.jpg",
+    "license": "CC BY 4.0",
+    "author": "Wanderingchina"
+  },
+  {
+    "city": "chengdu",
+    "query": "Chengdu giant panda base",
+    "title": "File:Panda in Chengdu Research Base of Giant Panda Breeding - 7708872342.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Panda_in_Chengdu_Research_Base_of_Giant_Panda_Breeding_-_7708872342.jpg",
+    "license": "CC BY 2.0",
+    "author": "George Lu"
+  },
+  {
+    "city": "sanya",
+    "query": "Sanya beach Hainan",
+    "title": "File:Dadonghai Beach, Sanya, Hainan Island (10098625104).jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Dadonghai_Beach,_Sanya,_Hainan_Island_(10098625104).jpg",
+    "license": "CC0",
+    "author": "Gary Todd from Xinzheng, China"
+  },
+  {
+    "city": "xiamen",
+    "query": "Gulangyu Xiamen island",
+    "title": "File:Gulangyu Island from Zhongshan Road, Xiamen.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Gulangyu_Island_from_Zhongshan_Road,_Xiamen.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Slyronit"
+  },
+  {
+    "city": "chongqing",
+    "query": "Chongqing Hongyadong night",
+    "title": "File:20250521 Hongyadong (223216).jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:20250521_Hongyadong_(223216).jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Yumeto"
+  },
+  {
+    "city": "harbin",
+    "query": "Harbin Ice and Snow World",
+    "title": "File:第十一届哈尔滨氷雪大世界 Ice Snow World IMG 0045.JPG",
+    "source": "https://commons.wikimedia.org/wiki/File:%E7%AC%AC%E5%8D%81%E4%B8%80%E5%B1%8A%E5%93%88%E5%B0%94%E6%BB%A8%E6%B0%B7%E9%9B%AA%E5%A4%A7%E4%B8%96%E7%95%8C_Ice_Snow_World_IMG_0045.JPG",
+    "license": "CC BY 3.0",
+    "author": "李吉秋"
+  },
+  {
+    "city": "xian",
+    "title": "File:Xi-an city wall.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Xi-an_city_wall.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Felix Andrews (Floybix)"
+  },
+  {
+    "city": "suzhou",
+    "title": "File:Humble Administrator's Garden Suzhou November 2017 003.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Humble_Administrator%27s_Garden_Suzhou_November_2017_003.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "King of Hearts"
+  },
+  {
+    "city": "guilin",
+    "title": "File:1 li jiang guilin yangshuo 2011.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:1_li_jiang_guilin_yangshuo_2011.jpg",
+    "license": "Wikimedia Commons",
+    "author": ""
+  },
+  {
+    "city": "nanjing",
+    "title": "File:Confucius Temple and Qinhuai River, Nanjing Night.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Confucius_Temple_and_Qinhuai_River,_Nanjing_Night.jpg",
+    "license": "Wikimedia Commons",
+    "author": ""
+  },
+  {
+    "city": "qingdao",
+    "title": "File:Qingdao - Drone view city with skyline (Unsplash).jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Qingdao_-_Drone_view_city_with_skyline_(Unsplash).jpg",
+    "license": "Wikimedia Commons",
+    "author": ""
+  },
+  {
+    "city": "lijiang",
+    "title": "File:Lijiang Yunnan Old-town-02.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Lijiang_Yunnan_Old-town-02.jpg",
+    "license": "Wikimedia Commons",
+    "author": ""
+  },
+  {
+    "city": "zhangjiajie",
+    "title": "File:Zhangjiajie National Forest Park.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Zhangjiajie_National_Forest_Park.jpg",
+    "license": "Wikimedia Commons",
+    "author": ""
+  },
+  {
+    "city": "lhasa",
+    "title": "File:Potala Palace, August 2009.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Potala_Palace,_August_2009.jpg",
+    "license": "Wikimedia Commons",
+    "author": ""
+  }
+]

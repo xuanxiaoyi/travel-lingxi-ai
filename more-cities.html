@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f7fbf8" />
+    <meta name="description" content="查看更多国内热门旅行城市，发现新的旅行灵感。" />
+    <title>更多目的地 - 智能旅游助手</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html#top" aria-label="智能旅游助手首页">
+          <span class="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2Z" />
+            </svg>
+          </span>
+          <span>智能旅游助手</span>
+        </a>
+
+        <nav class="site-nav" aria-label="主导航">
+          <a href="index.html#cities">目的地</a>
+          <a href="index.html#assistant">AI助手</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="more-page-main">
+      <section class="section cities-section more-page-section" aria-labelledby="more-cities-title">
+        <div class="section-heading">
+          <a class="back-link" href="index.html#cities">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M19 12H5M11 18l-6-6 6-6" />
+            </svg>
+            返回首页目的地
+          </a>
+          <p class="section-kicker">城市补充清单</p>
+          <h1 id="more-cities-title">更多值得收藏的目的地</h1>
+          <p>这里使用同一套原创视觉语言，但布局改成更像旅行地图的组合列表，避免继续沿用原网站卡片结构。</p>
+        </div>
+
+        <div class="destination-board more-board">
+          <article class="destination-item is-wide">
+            <a class="city-card destination-card" href="#city-chongqing" data-city="chongqing">
+              <img src="assets/scenery-4k/chongqing.jpg" alt="重庆洪崖洞4K风景照" />
+              <span class="destination-content">
+                <small>山城烟火</small>
+                <strong>重庆</strong>
+                <span>洪崖洞、长江索道、山城步道和火锅，适合夜景与美食路线。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item">
+            <a class="city-card destination-card" href="#city-nanjing" data-city="nanjing">
+              <img src="assets/scenery-4k/nanjing.jpg" alt="南京秦淮河4K风景照" />
+              <span class="destination-content">
+                <small>金陵文化</small>
+                <strong>南京</strong>
+                <span>中山陵、秦淮河、明城墙，适合历史慢游。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item is-tall">
+            <a class="city-card destination-card" href="#city-suzhou" data-city="suzhou">
+              <img src="assets/scenery-4k/suzhou.jpg" alt="苏州园林4K风景照" />
+              <span class="destination-content">
+                <small>园林水巷</small>
+                <strong>苏州</strong>
+                <span>拙政园、平江路、山塘街，适合精致江南周末。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item">
+            <a class="city-card destination-card" href="#city-qingdao" data-city="qingdao">
+              <img src="assets/scenery-4k/qingdao.jpg" alt="青岛海岸4K风景照" />
+              <span class="destination-content">
+                <small>海岸建筑</small>
+                <strong>青岛</strong>
+                <span>栈桥、八大关、奥帆中心，适合海风漫步。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item">
+            <a class="city-card destination-card" href="#city-lijiang" data-city="lijiang">
+              <img src="assets/scenery-4k/lijiang.jpg" alt="丽江古城4K风景照" />
+              <span class="destination-content">
+                <small>古城雪山</small>
+                <strong>丽江</strong>
+                <span>古城、束河、玉龙雪山，适合慢游与拍照。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item">
+            <a class="city-card destination-card" href="#city-xian" data-city="xian">
+              <img src="assets/scenery-4k/xian.jpg" alt="西安古城墙4K风景照" />
+              <span class="destination-content">
+                <small>古都夜色</small>
+                <strong>西安</strong>
+                <span>兵马俑、古城墙、大唐不夜城，适合历史文化路线。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item is-featured">
+            <a class="city-card destination-card" href="#city-zhangjiajie" data-city="zhangjiajie">
+              <img src="assets/scenery-4k/zhangjiajie.jpg" alt="张家界国家森林公园4K风景照" />
+              <span class="destination-content">
+                <small>峰林奇观</small>
+                <strong>张家界</strong>
+                <span>森林公园、天门山、玻璃桥，适合自然奇观和徒步观景。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item">
+            <a class="city-card destination-card" href="#city-harbin" data-city="harbin">
+              <img src="assets/scenery-4k/harbin.jpg" alt="哈尔滨冰雪大世界4K风景照" />
+              <span class="destination-content">
+                <small>冰雪冬游</small>
+                <strong>哈尔滨</strong>
+                <span>冰雪大世界、中央大街和俄式建筑，冬季主题鲜明。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item">
+            <a class="city-card destination-card" href="#city-lhasa" data-city="lhasa">
+              <img src="assets/scenery-4k/lhasa.jpg" alt="拉萨布达拉宫4K风景照" />
+              <span class="destination-content">
+                <small>高原文化</small>
+                <strong>拉萨</strong>
+                <span>布达拉宫、大昭寺、八廓街，适合有准备的高原旅行。</span>
+              </span>
+            </a>
+          </article>
+
+          <article class="destination-item xiamen-more-card">
+            <a class="city-card destination-card" href="#city-xiamen" data-city="xiamen">
+              <img src="assets/scenery-4k/xiamen.jpg" alt="厦门鼓浪屿4K风景照" />
+              <span class="destination-content">
+                <small>海滨文艺</small>
+                <strong>厦门</strong>
+                <span>鼓浪屿、环岛路和沙坡尾，适合轻松短途游。</span>
+              </span>
+            </a>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2026 智能旅游助手 让旅行更美好 版权所有：宣小易</p>
+    </footer>
+
+    <dialog class="city-dialog" id="cityDialog" aria-labelledby="dialogTitle">
+      <button class="dialog-close" type="button" aria-label="关闭城市详情">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </svg>
+      </button>
+      <div class="dialog-media">
+        <img id="dialogImage" alt="" />
+      </div>
+      <div class="dialog-body">
+        <p class="dialog-kicker" id="dialogKicker"></p>
+        <h2 id="dialogTitle"></h2>
+        <p id="dialogSummary"></p>
+        <div class="dialog-meta" id="dialogMeta"></div>
+        <div class="dialog-section">
+          <h3>景点介绍</h3>
+          <ul id="dialogList"></ul>
+        </div>
+      </div>
+    </dialog>
+
+    <button class="chat-button" type="button" aria-label="打开AI旅游助手" aria-controls="chatPanel" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M21 11.5a8.5 8.5 0 0 1-12.2 7.7L4 20l.8-4.4A8.5 8.5 0 1 1 21 11.5Z" />
+      </svg>
+    </button>
+
+    <section class="chat-panel" id="chatPanel" aria-label="AI旅游助手对话" hidden>
+      <header class="chat-panel-header">
+        <div class="chat-panel-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 3l1.8 4.4L18 9l-4.2 1.6L12 15l-1.8-4.4L6 9l4.2-1.6L12 3Z" />
+            <path d="M19 14l.9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14Z" />
+            <path d="M5 13l.7 1.6L7 15l-1.3.4L5 17l-.7-1.6L3 15l1.3-.4L5 13Z" />
+          </svg>
+          <h2>AI旅游助手</h2>
+        </div>
+        <button class="chat-close" type="button" aria-label="关闭AI旅游助手">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+      </header>
+      <div class="chat-messages" id="chatMessages" aria-live="polite"></div>
+      <form class="chat-form" id="chatForm">
+        <label class="sr-only" for="chatInput">输入你的旅游问题</label>
+        <input id="chatInput" name="question" type="text" autocomplete="off" placeholder="输入你的旅游问题..." />
+        <button class="chat-send" type="submit" aria-label="发送旅游问题">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M22 2 11 13" />
+            <path d="m22 2-7 20-4-9-9-4 20-7Z" />
+          </svg>
+        </button>
+      </form>
+    </section>
+
+    <script src="province-attractions.js"></script>
+    <script src="attraction-knowledge.js"></script>
+    <script src="knowledge-db.js"></script>
+    <script src="travel-apis.js"></script>
+    <script src="local-llm.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

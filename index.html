@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f7fbf8" />
+    <meta
+      name="description"
+      content="智能旅游助手为你推荐国内旅行目的地，并通过 AI 生成个性化旅行路线。"
+    />
+    <title>智能旅游助手</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#top" aria-label="智能旅游助手首页">
+          <span class="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2Z" />
+            </svg>
+          </span>
+          <span>智能旅游助手</span>
+        </a>
+
+        <nav class="site-nav" aria-label="主导航">
+          <a href="#cities">目的地</a>
+          <a href="#assistant">AI助手</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero travel-desk" aria-labelledby="hero-title">
+        <div class="hero-layout">
+          <div class="hero-copy">
+            <p class="hero-kicker">中国旅行灵感工作台</p>
+            <h1 id="hero-title">下一站，由你定义</h1>
+            <p>
+              从城市气质、旅行偏好和时间安排出发，快速找到适合自己的目的地。
+              也可以直接唤起 AI 旅游助手，让它帮你把路线、景点和美食一次整理好。
+            </p>
+            <div class="hero-actions" aria-label="页面快捷入口">
+              <a class="primary-link" href="#cities">查看目的地</a>
+              <a class="secondary-link" href="#assistant">了解 AI 助手</a>
+            </div>
+          </div>
+
+          <aside class="trip-board" aria-label="旅行灵感概览">
+            <div class="board-row board-row-main">
+              <span>旅行雷达</span>
+              <strong>16+</strong>
+              <small>热门城市</small>
+            </div>
+            <div class="board-grid">
+              <button type="button" data-recommendation-category="culture" aria-pressed="true">古城文化</button>
+              <button type="button" data-recommendation-category="nature" aria-pressed="false">山水自然</button>
+              <button type="button" data-recommendation-category="island" aria-pressed="false">海岛度假</button>
+              <button type="button" data-recommendation-category="food" aria-pressed="false">美食慢游</button>
+            </div>
+            <div class="route-note">
+              <span>AI 推荐方向</span>
+              <p>输入“2天 情侣 杭州”这类需求，可自动衔接上一次对话并细化行程。</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="recommendations" class="section recommendation-section" aria-labelledby="recommendation-title">
+        <div class="recommendation-heading">
+          <div>
+            <p class="section-kicker" id="recommendation-kicker">古城文化</p>
+            <h2 id="recommendation-title">按旅行方向推荐相关景点</h2>
+          </div>
+          <p id="recommendation-description">从历史古都、城墙街巷和文化遗产中，挑选适合深度漫游的城市。</p>
+        </div>
+        <div class="recommendation-grid" id="recommendationGrid" aria-live="polite"></div>
+      </section>
+
+      <section id="cities" class="section cities-section" aria-labelledby="cities-title">
+        <div class="section-heading">
+          <p class="section-kicker">精选目的地</p>
+          <h2 id="cities-title">按旅行方式选择下一站</h2>
+          <p>不再使用整齐复制的照片卡片，改为更有层次的目的地版面，每个城市都可以点击查看景点介绍。</p>
+        </div>
+
+        <div class="destination-board">
+          <article class="destination-item is-featured">
+            <a class="city-card destination-card" href="#city-hangzhou" data-city="hangzhou">
+              <img src="assets/scenery-4k/hangzhou.jpg" alt="杭州西湖4K风景照" />
+              <span class="destination-content">
+                <small>湖山慢游</small>
+                <strong>杭州</strong>
+                <span>西湖、灵隐寺、龙井村，把江南的松弛感串成一条轻路线。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item is-tall">
+            <a class="city-card destination-card" href="#city-beijing" data-city="beijing">
+              <img src="assets/scenery-4k/beijing.jpg" alt="北京故宫4K风景照" />
+              <span class="destination-content">
+                <small>历史文化</small>
+                <strong>北京</strong>
+                <span>故宫、长城与胡同，适合第一次系统了解中国古都。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item">
+            <a class="city-card destination-card" href="#city-shanghai" data-city="shanghai">
+              <img src="assets/scenery-4k/shanghai.jpg" alt="上海浦东天际线4K风景照" />
+              <span class="destination-content">
+                <small>都市夜景</small>
+                <strong>上海</strong>
+                <span>外滩、陆家嘴和梧桐街区，适合城市漫步。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item">
+            <a class="city-card destination-card" href="#city-chengdu" data-city="chengdu">
+              <img src="assets/scenery-4k/chengdu.jpg" alt="成都熊猫基地4K风景照" />
+              <span class="destination-content">
+                <small>美食休闲</small>
+                <strong>成都</strong>
+                <span>熊猫、茶馆、火锅和街巷烟火，是慢节奏旅行的代表。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item is-wide">
+            <a class="city-card destination-card" href="#city-xian" data-city="xian">
+              <img src="assets/scenery-4k/xian.jpg" alt="西安城墙4K风景照" />
+              <span class="destination-content">
+                <small>古都夜色</small>
+                <strong>西安</strong>
+                <span>兵马俑、古城墙、大唐不夜城，把历史和烟火气放在同一条路线上。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item">
+            <a class="city-card destination-card" href="#city-sanya" data-city="sanya">
+              <img src="assets/scenery-4k/sanya.jpg" alt="三亚海滨4K风景照" />
+              <span class="destination-content">
+                <small>海岛假日</small>
+                <strong>三亚</strong>
+                <span>海湾、椰林和度假酒店，适合放空型行程。</span>
+              </span>
+            </a>
+          </article>
+          <article class="destination-item">
+            <a class="city-card destination-card" href="#city-guilin" data-city="guilin">
+              <img src="assets/scenery-4k/guilin.jpg" alt="桂林漓江4K风景照" />
+              <span class="destination-content">
+                <small>山水摄影</small>
+                <strong>桂林</strong>
+                <span>漓江、阳朔和喀斯特峰林，适合自然风光路线。</span>
+              </span>
+            </a>
+          </article>
+          
+          <article class="destination-item destination-more-entry">
+            <a class="more-cities-link more-cities-card" href="more-cities.html">
+              <span>更多城市</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          </article>
+        </div>
+      </section>
+
+      <section id="assistant" class="section assistant-section" aria-labelledby="assistant-title">
+        <div class="assistant-layout">
+          <div class="section-heading assistant-heading">
+            <p class="section-kicker">AI 旅游助手</p>
+            <h2 id="assistant-title">像正常旅行顾问一样对话</h2>
+            <p>右下角入口可以打开对话窗口，助手会结合知识库、上下文和用户偏好，流式输出更完整的路线建议。</p>
+          </div>
+          <div class="assistant-flow" aria-label="AI旅游助手能力">
+            <div>
+              <strong>RAG 知识库</strong>
+              <span>覆盖页面城市和全国省份景区资料，减少答非所问。</span>
+            </div>
+            <div>
+              <strong>Agent 规划</strong>
+              <span>根据天数、同行人和偏好，自动拆分景点、美食、交通和住宿建议。</span>
+            </div>
+            <div>
+              <strong>流式回答</strong>
+              <span>先思考再输出，回答节奏更接近真实 AI 助手。</span>
+            </div>
+            <div>
+              <strong>实时 API</strong>
+              <span>可查询天气、当前位置、当地时间和旅行常用汇率。</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2026 智能旅游助手 让旅行更美好 版权所有：宣小易</p>
+    </footer>
+
+    <dialog class="city-dialog" id="cityDialog" aria-labelledby="dialogTitle">
+      <button class="dialog-close" type="button" aria-label="关闭城市详情">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </svg>
+      </button>
+      <div class="dialog-media">
+        <img id="dialogImage" alt="" />
+      </div>
+      <div class="dialog-body">
+        <p class="dialog-kicker" id="dialogKicker"></p>
+        <h2 id="dialogTitle"></h2>
+        <p id="dialogSummary"></p>
+        <div class="dialog-meta" id="dialogMeta"></div>
+        <div class="dialog-section">
+          <h3>景点介绍</h3>
+          <ul id="dialogList"></ul>
+        </div>
+      </div>
+    </dialog>
+
+    <button class="chat-button" type="button" aria-label="打开AI旅游助手" aria-controls="chatPanel" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M21 11.5a8.5 8.5 0 0 1-12.2 7.7L4 20l.8-4.4A8.5 8.5 0 1 1 21 11.5Z" />
+      </svg>
+    </button>
+
+    <section class="chat-panel" id="chatPanel" aria-label="AI旅游助手对话" hidden>
+      <header class="chat-panel-header">
+        <div class="chat-panel-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 3l1.8 4.4L18 9l-4.2 1.6L12 15l-1.8-4.4L6 9l4.2-1.6L12 3Z" />
+            <path d="M19 14l.9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14Z" />
+            <path d="M5 13l.7 1.6L7 15l-1.3.4L5 17l-.7-1.6L3 15l1.3-.4L5 13Z" />
+          </svg>
+          <h2>AI旅游助手</h2>
+        </div>
+        <button class="chat-close" type="button" aria-label="关闭AI旅游助手">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+      </header>
+      <div class="chat-messages" id="chatMessages" aria-live="polite"></div>
+      <form class="chat-form" id="chatForm">
+        <label class="sr-only" for="chatInput">输入你的旅游问题</label>
+        <input id="chatInput" name="question" type="text" autocomplete="off" placeholder="输入你的旅游问题..." />
+        <button class="chat-send" type="submit" aria-label="发送旅游问题">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M22 2 11 13" />
+            <path d="m22 2-7 20-4-9-9-4 20-7Z" />
+          </svg>
+        </button>
+      </form>
+    </section>
+
+    <script src="province-attractions.js"></script>
+    <script src="attraction-knowledge.js"></script>
+    <script src="knowledge-db.js"></script>
+    <script src="travel-apis.js"></script>
+    <script src="local-llm.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

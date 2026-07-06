@@ -1,0 +1,11 @@
+node_modules/
+playwright-report/
+test-results/
+dist/
+vendor/
+assets/cities/
+assets/generated-cities/
+assets/tourism-4k/
+.env
+.DS_Store
+Thumbs.db
