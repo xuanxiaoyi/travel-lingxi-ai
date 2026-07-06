@@ -1,10 +1,10 @@
 {
   "cleanUrls": true,
   "functions": {
-    "api/travel-agent.js": {
+    "api/travel-agent.py": {
       "maxDuration": 10
     },
-    "api/local-llm.js": {
+    "api/local-llm.py": {
       "maxDuration": 10
     }
   },

@@ -1109,6 +1109,23 @@ function buildCityAnswer(cityKey, question) {
   return buildRoute(guide, days, preference);
 }
 
+async function appendMapSection(answer, guide, question) {
+  if (!guide || typeof TravelApis === "undefined" || !TravelApis.isMapIntent?.(question)) return answer;
+
+  try {
+    const mapSection = await TravelApis.getRouteMapSection(guide.title, guide.attractions);
+    return mapSection ? `${answer}${mapSection}` : answer;
+  } catch {
+    return `${answer}\n\n### 地图位置\n地图接口暂时没有返回稳定结果，建议出发前再用手机地图核对景区入口、实时交通和换乘路线。`;
+  }
+}
+
+async function buildCityAnswerWithMap(cityKey, question) {
+  const guide = cityGuides[cityKey] || extraGuides[cityKey];
+  const answer = buildCityAnswer(cityKey, question);
+  return appendMapSection(answer, guide, question);
+}
+
 function buildClarificationAnswer() {
   return "我还需要更多信息，才能安排得更准确一点哦～😊\n\n你可以按这个格式告诉我：\n- 想去的城市：例如杭州、台州、绍兴、黄山、敦煌、喀什、广州、长沙等\n- 出行天数：例如2天、3天、5天\n- 偏好：历史文化、美食、亲子、海边、自然风光、拍照、轻松慢游";
 }
@@ -1201,14 +1218,14 @@ async function getBotResponse(question) {
       : buildAttractionAnswer(attractionMatches[0]);
   }
 
-  if (cityKey) return buildCityAnswer(cityKey, question);
+  if (cityKey) return buildCityAnswerWithMap(cityKey, question);
 
   if (lastAttractionContext && followUpIntent) {
     return buildAttractionRoute(lastAttractionContext, question);
   }
 
   if (lastGuide && followUpIntent) {
-    return buildRoute(lastGuide, parseDays(question), getPreferenceLabel(question));
+    return appendMapSection(buildRoute(lastGuide, parseDays(question), getPreferenceLabel(question)), lastGuide, question);
   }
 
   if (isBriefAcknowledgement(question) && (lastAttractionContext || lastGuide)) {

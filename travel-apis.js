@@ -66,6 +66,28 @@ const TravelApis = (() => {
     99: "强雷雨伴冰雹",
   };
 
+  const mapCache = new Map();
+  let lastMapRequestAt = 0;
+  const knownCoordinates = {
+    杭州: [30.2741, 120.1551],
+    西湖: [30.2460, 120.1431],
+    杭州西湖风景区: [30.2460, 120.1431],
+    灵隐寺: [30.2405, 120.1012],
+    西溪湿地: [30.2715, 120.0649],
+    西溪国家湿地公园: [30.2715, 120.0649],
+    龙井村: [30.2280, 120.0950],
+    河坊街: [30.2451, 120.1740],
+    宋城: [30.1716, 120.0929],
+    京杭大运河: [30.3180, 120.1500],
+    北京: [39.9042, 116.4074],
+    上海: [31.2304, 121.4737],
+    成都: [30.5728, 104.0668],
+    西安: [34.3416, 108.9398],
+    三亚: [18.2528, 109.5119],
+    桂林: [25.2736, 110.2900],
+    厦门: [24.4798, 118.0894],
+  };
+
   function withTimeout(ms = 9000) {
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), ms);
@@ -81,6 +103,133 @@ const TravelApis = (() => {
     } finally {
       window.clearTimeout(timer);
     }
+  }
+
+  function isMapIntent(question) {
+    return /地图|位置|定位|导航|怎么走|距离|顺路|附近|方位|经纬度/.test(question);
+  }
+
+  async function throttledMapFetch(url) {
+    const elapsed = Date.now() - lastMapRequestAt;
+    if (elapsed < 1100) {
+      await new Promise((resolve) => window.setTimeout(resolve, 1100 - elapsed));
+    }
+    lastMapRequestAt = Date.now();
+    return fetchJson(url, { timeout: 7000 });
+  }
+
+  async function geocodeForMap(name, city = "") {
+    const query = [name, city, "中国"].filter(Boolean).join(" ");
+    if (mapCache.has(query)) return mapCache.get(query);
+    if (knownCoordinates[name]) {
+      const [lat, lon] = knownCoordinates[name];
+      const point = { name, lat, lon };
+      mapCache.set(query, point);
+      return point;
+    }
+
+    const photonParams = new URLSearchParams({
+      q: query,
+      limit: "1",
+      lang: "en",
+    });
+
+    try {
+      const data = await throttledMapFetch(`https://photon.komoot.io/api/?${photonParams.toString()}`);
+      const feature = data?.features?.[0];
+      if (feature?.geometry?.coordinates?.length >= 2) {
+        const [lon, lat] = feature.geometry.coordinates;
+        const point = { name, lat: Number(lat), lon: Number(lon) };
+        mapCache.set(query, point);
+        return point;
+      }
+    } catch {
+      // Fall back to Nominatim and built-in coordinates below.
+    }
+
+    const params = new URLSearchParams({
+      q: query,
+      format: "jsonv2",
+      limit: "1",
+      "accept-language": "zh-CN",
+    });
+
+    try {
+      const data = await throttledMapFetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`);
+      const first = data?.[0];
+      if (!first) {
+        mapCache.set(query, null);
+        return null;
+      }
+      const point = {
+        name,
+        lat: Number(first.lat),
+        lon: Number(first.lon),
+      };
+      mapCache.set(query, point);
+      return point;
+    } catch {
+      if (knownCoordinates[city]) {
+        const [lat, lon] = knownCoordinates[city];
+        const point = { name, lat, lon };
+        mapCache.set(query, point);
+        return point;
+      }
+      mapCache.set(query, null);
+      return null;
+    }
+  }
+
+  function getOsmPlaceLink(point) {
+    return `https://www.openstreetmap.org/?mlat=${point.lat.toFixed(6)}&mlon=${point.lon.toFixed(6)}#map=15/${point.lat.toFixed(6)}/${point.lon.toFixed(6)}`;
+  }
+
+  function getOsmDirectionsLink(points) {
+    if (points.length < 2) return "";
+    const route = points.slice(0, 6).map((point) => `${point.lat.toFixed(6)},${point.lon.toFixed(6)}`).join(";");
+    return `https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${encodeURIComponent(route).replace(/%3B/g, ";")}`;
+  }
+
+  async function getOsrmSummary(points) {
+    if (points.length < 2) return "";
+    const coords = points.slice(0, 6).map((point) => `${point.lon.toFixed(6)},${point.lat.toFixed(6)}`).join(";");
+    const params = new URLSearchParams({ overview: "false", steps: "false", alternatives: "false" });
+
+    try {
+      const data = await fetchJson(`https://router.project-osrm.org/route/v1/driving/${coords}?${params.toString()}`, { timeout: 7000 });
+      const route = data.routes?.[0];
+      if (!route?.distance || !route?.duration) return "";
+      const km = route.distance / 1000;
+      const minutes = Math.round(route.duration / 60);
+      const timeText = minutes >= 60 ? `${(minutes / 60).toFixed(1)}小时` : `${minutes}分钟`;
+      return `按 OSRM 驾车路线粗略估算，串联这些点约 ${km.toFixed(1)} 公里，车程约 ${timeText}。`;
+    } catch {
+      return "";
+    }
+  }
+
+  async function getRouteMapSection(destination, spots = []) {
+    const names = spots
+      .map((spot) => Array.isArray(spot) ? spot[0] : spot?.name)
+      .filter(Boolean)
+      .slice(0, 5);
+    if (!names.length) return "";
+
+    const points = [];
+    for (const name of names) {
+      const point = await geocodeForMap(name, destination);
+      if (point) points.push(point);
+    }
+
+    if (!points.length) {
+      return "\n\n### 地图位置\n我尝试调用 OpenStreetMap 地理编码，但这次没有拿到稳定坐标。建议出发前再用手机地图核对实时路线和景区入口。";
+    }
+
+    const placeLines = points.map((point) => `- **${point.name}**：[${point.lat.toFixed(4)}, ${point.lon.toFixed(4)}](${getOsmPlaceLink(point)})`);
+    const directions = getOsmDirectionsLink(points);
+    const routeSummary = await getOsrmSummary(points);
+
+    return `\n\n### 地图位置与顺路建议\n我用 OpenStreetMap/Nominatim 查询了核心点位，下面的链接可以直接打开地图核对位置：\n${placeLines.join("\n")}${directions ? `\n- 顺路导航参考：[${points[0].name} 到 ${points[points.length - 1].name}](${directions})` : ""}${routeSummary ? `\n- ${routeSummary}` : ""}\n- 地图结果用于规划参考，实际出行以当天交通、景区入口和手机导航为准。`;
   }
 
   function pickPlace(question, fallback = "") {
@@ -294,5 +443,7 @@ const TravelApis = (() => {
     getTime,
     getCurrentLocation,
     getCurrency,
+    getRouteMapSection,
+    isMapIntent,
   };
 })();

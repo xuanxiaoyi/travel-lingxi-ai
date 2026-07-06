@@ -3,7 +3,7 @@ const TravelLocalLLM = (() => {
   const proxyEndpoint = "/api/local-llm";
   const agentEndpoint = "/api/travel-agent";
   const model = "qwen3:4b";
-  const timeoutMs = 7000;
+  const timeoutMs = 12000;
 
   function cleanModelText(text) {
     let cleaned = String(text || "")

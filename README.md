@@ -1,6 +1,6 @@
 # 旅途灵犀
 
-旅途灵犀是一个智能旅游助手网站。基础功能可直接打开 `index.html` 使用；如果通过 `npm run serve` 启动，会额外启用 Node 侧 LangChain Agent 服务。
+旅途灵犀是一个智能旅游助手网站。基础功能可直接打开 `index.html` 使用；线上部署时可通过 Python Serverless API 提供 Agent 问答接口；如果通过 `npm run serve` 本地启动，会额外启用本地预览服务。
 
 ## 主要功能
 
@@ -11,6 +11,7 @@
 - 高频景点详细知识库
 - 浏览器 IndexedDB 本地知识库存储
 - 天气、时间、定位、汇率等实时 API 查询
+- 地图位置增强：当用户提出地图、导航、距离或顺路需求时，结合 OpenStreetMap / Photon / Nominatim / OSRM 输出景点点位和路线参考
 - LangChain Agent：基于 `createAgent`、Tool Calling 和 Ollama `qwen3:4b`，在知识库检索、地区查询、路线规划和实时 API 路由之间自动调度
 - 本地大模型兜底：Agent 或知识库没有命中时，可调用 Ollama 的 `qwen3:4b`
 
@@ -24,6 +25,8 @@
 - `北京现在几点`
 - `我在哪`
 - `日元汇率`
+- `杭州3天路线，结合地图位置`
+- `西湖到灵隐寺怎么走`
 
 ## 关键文件
 
@@ -35,6 +38,9 @@
 - `national-scenic-knowledge.js`：国家5A级旅游景区补充知识库，包含结构化介绍资料
 - `knowledge-db.js`：浏览器本地数据库 IndexedDB
 - `travel-apis.js`：天气、时间、定位、汇率 API
+- `python_agent_backend.py`：Python Agent 后端核心逻辑，包含知识库检索、路线规划、地图增强和模型兜底
+- `api/travel-agent.py`：Vercel Python Serverless Agent 接口
+- `api/local-llm.py`：Vercel Python Serverless 本地模型代理接口
 - `local-llm.js`：前端调用 LangChain Agent 和本地大模型兜底
 - `scripts/travel-agent.mjs`：LangChain Agent 服务，定义旅游知识库检索、地区检索、路线规划、实时 API 路由工具
 
