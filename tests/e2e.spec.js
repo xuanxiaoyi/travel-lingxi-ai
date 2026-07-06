@@ -72,6 +72,27 @@ test.beforeEach(async ({ page }) => {
     });
   };
 
+  await page.route("**/api/travel-agent", async (route) => {
+    const headers = {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "POST, OPTIONS",
+      "access-control-allow-headers": "content-type",
+    };
+    if (route.request().method() === "OPTIONS") {
+      await route.fulfill({ status: 204, headers });
+      return;
+    }
+
+    await route.fulfill({
+      headers,
+      contentType: "application/json",
+      body: JSON.stringify({
+        answer: "我通过 LangChain Agent 调用了旅游工具后，为你整理如下：可以把问题拆成目的地、时间、预算和同行人，再结合知识库检索与路线规划工具生成旅行建议。",
+        source: "langchain-agent",
+      }),
+    });
+  });
+
   await page.route("**/api/local-llm", fulfillLocalModel);
   await page.route("**/api/generate", fulfillLocalModel);
 });
@@ -91,7 +112,7 @@ test("首页核心流程：推荐、弹窗、AI问答、实时天气", async ({ 
   await openAssistant(page);
   await askAssistant(page, "介绍普陀山", "普陀山是中国佛教四大名山之一");
   await askAssistant(page, "杭州天气", "当前：大部晴朗");
-  await askAssistant(page, "我想要一个知识库没有的旅行灵感", "本地大模型 qwen3:4b");
+  await askAssistant(page, "我想要一个知识库没有的旅行灵感", "LangChain Agent");
 });
 
 test("更多城市页：城市卡片和知识库问答可用", async ({ page }) => {

@@ -10,6 +10,7 @@ const serveRoot = rootArg?.split("=")[1] || process.env.SERVE_ROOT || ".";
 const root = resolve(process.cwd(), serveRoot);
 const ollamaEndpoint = process.env.OLLAMA_ENDPOINT || "http://127.0.0.1:11434/api/generate";
 const ollamaTimeoutMs = Number(process.env.OLLAMA_TIMEOUT_MS || 7000);
+let travelAgentModulePromise = null;
 
 const types = {
   ".html": "text/html; charset=utf-8",
@@ -95,8 +96,50 @@ async function handleLocalLlmProxy(request, response) {
   }
 }
 
+async function handleTravelAgentProxy(request, response) {
+  if (request.method === "OPTIONS") {
+    response.writeHead(204, {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "POST, OPTIONS",
+      "access-control-allow-headers": "content-type",
+    });
+    response.end();
+    return;
+  }
+
+  if (request.method !== "POST") {
+    response.writeHead(405, { "content-type": "application/json; charset=utf-8" });
+    response.end(JSON.stringify({ error: "Method not allowed" }));
+    return;
+  }
+
+  try {
+    const body = JSON.parse(await readRequestBody(request) || "{}");
+    travelAgentModulePromise ||= import("./travel-agent.mjs");
+    const { askTravelAgent } = await travelAgentModulePromise;
+    const result = await askTravelAgent(body);
+
+    response.writeHead(200, {
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": "*",
+    });
+    response.end(JSON.stringify(result));
+  } catch (error) {
+    response.writeHead(502, {
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": "*",
+    });
+    response.end(JSON.stringify({ error: "LangChain Agent unavailable", detail: error.message }));
+  }
+}
+
 createServer((request, response) => {
   const pathname = new URL(request.url || "/", `http://localhost:${port}`).pathname;
+  if (pathname === "/api/travel-agent") {
+    handleTravelAgentProxy(request, response);
+    return;
+  }
+
   if (pathname === "/api/local-llm") {
     handleLocalLlmProxy(request, response);
     return;

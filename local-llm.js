@@ -1,6 +1,7 @@
 const TravelLocalLLM = (() => {
   const directEndpoint = "http://127.0.0.1:11434/api/generate";
   const proxyEndpoint = "/api/local-llm";
+  const agentEndpoint = "/api/travel-agent";
   const model = "qwen3:4b";
   const timeoutMs = 7000;
 
@@ -79,7 +80,35 @@ ${lastAttraction}
     }
   }
 
+  async function requestAgent(question, context = {}) {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(agentEndpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({ question, context }),
+      });
+      if (!response.ok) throw new Error(`LangChain Agent returned ${response.status}`);
+      const data = await response.json();
+      if (!isUsableModelText(data.answer || "")) throw new Error("LangChain Agent returned unusable response");
+      return data.answer;
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }
+
   async function ask(question, context = {}) {
+    if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+      try {
+        return await requestAgent(question, context);
+      } catch {
+        // Fall back to the direct local model proxy below.
+      }
+    }
+
     const payload = {
       model,
       prompt: buildPrompt(question, context),
@@ -88,9 +117,9 @@ ${lastAttraction}
       options: {
         temperature: 0.45,
         top_p: 0.85,
-          num_predict: 220,
-        },
-      };
+        num_predict: 220,
+      },
+    };
 
     let lastError = null;
     for (const endpoint of getEndpointCandidates()) {
